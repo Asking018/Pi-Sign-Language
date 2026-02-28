@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Features - Pi Sign Language Translator</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Pi Network Frontend SDK (use in Pi Browser; declare app on Developer Portal develop.pi) -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>if (typeof window.Pi !== 'undefined') { Pi.init({ version: "2.0" }); }</script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Pi Sign Language Translator</h1>
+            <div class="user-profile">
+                <div id="user-info" class="hidden">
+                    <span id="username">Loading...</span>
+                </div>
+                <button id="connect-pi" class="pi-button">Connect Pi Account</button>
+            </div>
+        </header>
+
+        <main class="premium-content">
+            <h2>Premium Features</h2>
+            <p class="premium-description">Unlock advanced features and support our mission to make sign language accessible to everyone.</p>
+
+            <div class="subscription-plans">
+                <div class="plan">
+                    <h3>Monthly Plan</h3>
+                    <p class="price">π 2/month</p>
+                    <ul class="features">
+                        <li>Unlimited translations</li>
+                        <li>Advanced sign detection</li>
+                        <li>Offline mode</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <div class="button-container">
+                        <button class="pay-pi-button" data-amount="2" data-memo="Pi Sign Language - Monthly" data-plan="monthly">Pay with Pi</button>
+                    </div>
+                </div>
+
+                <div class="plan featured">
+                    <span class="featured-tag">Best Value</span>
+                    <h3>Annual Plan</h3>
+                    <p class="price">π 20/year</p>
+                    <ul class="features">
+                        <li>All monthly features</li>
+                        <li>Save 17% annually</li>
+                        <li>Custom sign library</li>
+                        <li>Early access to updates</li>
+                    </ul>
+                    <div class="button-container">
+                        <button class="pay-pi-button" data-amount="20" data-memo="Pi Sign Language - Annual" data-plan="annual">Pay with Pi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subscription-info">
+                <div class="info-block">
+                    <h4>Why Go Premium?</h4>
+                    <p>Our premium features are designed to enhance your sign language learning experience. With advanced detection algorithms and offline capabilities, you can practice and translate signs anywhere, anytime.</p>
+                </div>
+                <div class="info-block">
+                    <h4>Secure Payments</h4>
+                    <p>All payments are processed securely through the Pi Network. Your subscription will be activated immediately after payment confirmation.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Powered by Pi Network</p>
+            <div class="footer-links">
+                <a href="index.html">Back to Translator</a>
+                <a href="learn.html">Learn Sign Language</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Pi Payment flow: createPayment -> onReadyForServerApproval -> server /approve -> user signs -> onReadyForServerCompletion -> server /complete
+        function createPiPayment(amount, memo, metadata) {
+            if (typeof Pi === 'undefined' || !Pi.createPayment) {
+                alert('Open this app in Pi Browser to pay with Pi.');
+                return;
+            }
+            const base = window.location.origin;
+            Pi.createPayment({
+                amount: amount,
+                memo: memo,
+                metadata: metadata || {}
+            }, {
+                onReadyForServerApproval: function(paymentId) {
+                    fetch(base + '/api/pi/approve', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId: paymentId })
+                    }).then(function(r) {
+                        if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || d.detail || 'Approval failed'); });
+                        return r.json();
+                    }).then(function() {
+                        console.log('Payment approved on server:', paymentId);
+                    }).catch(function(err) {
+                        console.error('Server approval failed:', err);
+                        alert('Payment approval failed. ' + (err.message || ''));
+                    });
+                },
+                onReadyForServerCompletion: function(paymentId, txid) {
+                    fetch(base + '/api/pi/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId: paymentId, txid: txid })
+                    }).then(function(r) {
+                        if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || d.detail || 'Completion failed'); });
+                        return r.json();
+                    }).then(function() {
+                        console.log('Payment completed:', paymentId, txid);
+                        alert('Thank you! Your subscription is active.');
+                        localStorage.setItem('pi_premium', 'true');
+                    }).catch(function(err) {
+                        console.error('Server completion failed:', err);
+                        alert('Payment could not be completed. Do not deliver the product. ' + (err.message || ''));
+                    });
+                },
+                onCancel: function(paymentId) {
+                    console.log('Payment cancelled:', paymentId);
+                },
+                onError: function(error, payment) {
+                    console.error('Payment error:', error, payment);
+                    alert('Payment error: ' + (error && error.message ? error.message : 'Unknown error'));
+                }
+            });
+        }
+
+        document.querySelectorAll('.pay-pi-button').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const amount = parseFloat(button.getAttribute('data-amount')) || 0;
+                const memo = button.getAttribute('data-memo') || 'Pi Sign Language Premium';
+                const plan = button.getAttribute('data-plan') || 'premium';
+                if (!amount || amount <= 0) {
+                    alert('Invalid amount.');
+                    return;
+                }
+                if (!localStorage.getItem('pi_auth_token')) {
+                    alert('Please connect your Pi account first.');
+                    return;
+                }
+                createPiPayment(amount, memo, { plan: plan });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var authToken = localStorage.getItem('pi_auth_token');
+            var userInfo = JSON.parse(localStorage.getItem('pi_user_info') || '{}');
+            if (authToken && userInfo.username) {
+                var userInfoEl = document.getElementById('user-info');
+                var connectBtn = document.getElementById('connect-pi');
+                var usernameEl = document.getElementById('username');
+                if (userInfoEl) userInfoEl.classList.remove('hidden');
+                if (connectBtn) connectBtn.style.display = 'none';
+                if (usernameEl) usernameEl.textContent = userInfo.username;
+            }
+        });
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html> 

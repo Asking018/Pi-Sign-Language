@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Sign Language Translator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Add TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <!-- Add MediaPipe Hands dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.0/dist/hand-pose-detection.js"></script>
+    <!-- Pi Network Frontend SDK (use in Pi Browser for full functionality) -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>
+        if (typeof window.Pi !== 'undefined') {
+            Pi.init({ version: "2.0" });
+        } else {
+            window.Pi = {
+                init: function(c) { return Promise.resolve(); },
+                authenticate: function(scopes, onIncompletePaymentFound) {
+                    if (typeof onIncompletePaymentFound === 'function') onIncompletePaymentFound(null);
+                    return Promise.resolve({ user: { username: 'TestUser' }, accessToken: 'mock-token' });
+                }
+            };
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pi Sign Language Translator</h1>
+            <div class="user-profile">
+                <div id="user-info" class="hidden">
+                    <span id="username">Loading...</span>
+                </div>
+                <button id="connect-pi" class="pi-button">Connect Pi Account</button>
+            </div>
+        </header>
+
+        <!-- Mode tabs: Single Letter | Create Word -->
+        <nav class="mode-tabs" role="tablist">
+            <button type="button" class="mode-tab active" data-mode="single" aria-selected="true">Single Letter</button>
+            <button type="button" class="mode-tab" data-mode="word" aria-selected="false">Create Word</button>
+        </nav>
+
+        <main>
+            <!-- Create Word mode: word display + progress + controls (premium gated) -->
+            <section id="word-creator-section" class="word-creator-section hidden" aria-hidden="true">
+                <div class="word-creator-inner">
+                    <div class="word-display-wrapper">
+                        <label class="word-display-label">Word</label>
+                        <div id="word-display" class="word-display" aria-live="polite">—</div>
+                    </div>
+                    <div class="capture-progress-wrapper">
+                        <label class="capture-progress-label">Hold sign to add letter</label>
+                        <div class="capture-progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            <div id="capture-progress-fill" class="capture-progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="word-controls">
+                        <button type="button" id="word-space" class="word-control-btn" title="Add space between words">␣ Space</button>
+                        <button type="button" id="word-backspace" class="word-control-btn" title="Remove last letter">⌫ Backspace</button>
+                        <button type="button" id="word-clear" class="word-control-btn" title="Clear word">Clear All</button>
+                        <button type="button" id="word-speak" class="word-control-btn word-speak-btn" title="Read word aloud">🔊 Speak Word</button>
+                    </div>
+                </div>
+                <!-- Premium gate overlay -->
+                <div id="word-creator-premium-overlay" class="word-creator-premium-overlay hidden">
+                    <p class="premium-overlay-text">Unlock Word Creation with Pi Coin</p>
+                    <a href="premium.html" class="premium-overlay-link">Go to Subscription</a>
+                </div>
+            </section>
+
+            <div class="camera-section">
+                <div class="camera-container">
+                    <video id="camera-feed" autoplay playsinline></video>
+                    <div class="camera-overlay">
+                        <div class="hand-detection-box"></div>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button id="switch-camera" class="control-button">
+                        <span class="icon">🔄</span> Switch Camera
+                    </button>
+                    <button id="toggle-camera" class="control-button">
+                        <span class="icon">📷</span> Toggle Camera
+                    </button>
+                    <button id="test-landmarks" class="control-button">
+                        <span class="icon">🧪</span> Test with "A" Sign
+                    </button>
+                </div>
+            </div>
+
+            <div class="detection-section">
+                <h2>Detected Sign</h2>
+                <div id="sign-output" class="output-box">Loading...</div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-links">
+                <a href="learn.html" class="footer-link">Learn Sign Language</a>
+                <p class="footer-text">Powered by Pi Network & AI Technology</p>
+                <a href="premium.html" class="footer-link">Premium Subscription</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="wordLogic.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Sign Language - Pi Sign Language Translator</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Pi Network SDK -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>
+        // Initialize Pi SDK with sandbox mode for development
+        Pi.init({ 
+            version: "2.0",
+            sandbox: true, // Enable sandbox mode for development
+            appId: "xlke9sxzinitxhhzbccvh1ysb1rorsjwkhjngltoqw00czvwjoc00l0kggtepryj" // Your Pi Network App ID
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Pi Sign Language Translator</h1>
+            <div class="user-profile">
+                <div id="user-info" class="hidden">
+                    <img id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314CFF4'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="User Avatar">
+                    <span id="username">Loading...</span>
+                </div>
+                <button id="connect-pi" class="pi-button">Connect Pi Account</button>
+            </div>
+        </header>
+
+        <main class="learn-content">
+            <h2>Learn American Sign Language</h2>
+            <p class="learn-description">Master the ASL alphabet with our comprehensive guide. Practice each letter to improve your signing skills.</p>
+
+            <div class="alphabet-grid">
+                <div class="letter-card">
+                    <img src="assets/signs/A.jpg" alt="Sign for letter A">
+                    <h3>Letter A</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/B.jpg" alt="Sign for letter B">
+                    <h3>Letter B</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/C.jpg" alt="Sign for letter C">
+                    <h3>Letter C</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/D.jpg" alt="Sign for letter D">
+                    <h3>Letter D</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/E.jpg" alt="Sign for letter E">
+                    <h3>Letter E</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/F.jpg" alt="Sign for letter F">
+                    <h3>Letter F</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/G.jpg" alt="Sign for letter G">
+                    <h3>Letter G</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/H.jpg" alt="Sign for letter H">
+                    <h3>Letter H</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/I.jpg" alt="Sign for letter I">
+                    <h3>Letter I</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/J.jpg" alt="Sign for letter J">
+                    <h3>Letter J</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/K.jpg" alt="Sign for letter K">
+                    <h3>Letter K</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/L.jpg" alt="Sign for letter L">
+                    <h3>Letter L</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/M.jpg" alt="Sign for letter M">
+                    <h3>Letter M</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/N.jpg" alt="Sign for letter N">
+                    <h3>Letter N</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/O.jpg" alt="Sign for letter O">
+                    <h3>Letter O</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/P.jpg" alt="Sign for letter P">
+                    <h3>Letter P</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/Q.jpg" alt="Sign for letter Q">
+                    <h3>Letter Q</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/R.jpg" alt="Sign for letter R">
+                    <h3>Letter R</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/S.jpg" alt="Sign for letter S">
+                    <h3>Letter S</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/T.jpg" alt="Sign for letter T">
+                    <h3>Letter T</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/U.jpg" alt="Sign for letter U">
+                    <h3>Letter U</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/V.jpg" alt="Sign for letter V">
+                    <h3>Letter V</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/W.jpg" alt="Sign for letter W">
+                    <h3>Letter W</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/X.jpg" alt="Sign for letter X">
+                    <h3>Letter X</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/Y.jpg" alt="Sign for letter Y">
+                    <h3>Letter Y</h3>
+                </div>
+                <div class="letter-card">
+                    <img src="assets/signs/Z.jpg" alt="Sign for letter Z">
+                    <h3>Letter Z</h3>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Powered by Pi Network</p>
+            <div class="footer-links">
+                <a href="index.html">Back to Translator</a>
+                <a href="premium.html">Premium Features</a>
+            </div>
+        </footer>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html> 
