@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation - Pi Sign Language Translator</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Pi Network SDK -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>
+        // Initialize Pi SDK with sandbox mode for development
+        Pi.init({ 
+            version: "2.0",
+            sandbox: true, // Enable sandbox mode for development
+            appId: "xlke9sxzinitxhhzbccvh1ysb1rorsjwkhjngltoqw00czvwjoc00l0kggtepryj" // Your Pi Network App ID
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Payment Confirmation</h1>
+            <div class="user-profile">
+                <div id="user-info" class="hidden">
+                    <img id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314CFF4'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="User Avatar">
+                    <span id="username">Loading...</span>
+                </div>
+                <button id="connect-pi" class="pi-button">Connect Pi Account</button>
+            </div>
+        </header>
+
+        <main class="payment-content">
+            <div class="payment-details">
+                <h2>Payment Details</h2>
+                <div class="payment-info">
+                    <div class="info-row">
+                        <span class="label">Plan Type:</span>
+                        <span id="plan-type">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Amount:</span>
+                        <span id="payment-amount">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Duration:</span>
+                        <span id="payment-duration">Loading...</span>
+                    </div>
+                </div>
+                <div class="payment-status">
+                    <h3>Payment Status</h3>
+                    <div id="status-message">Initializing payment...</div>
+                </div>
+                <div class="payment-actions">
+                    <button id="share-button" class="action-button">Share Subscription</button>
+                    <button id="watch-ad-button" class="action-button">Watch Ad for Discount</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Powered by Pi Network</p>
+            <div class="footer-links">
+                <a href="premium.html">Back to Plans</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const planType = urlParams.get('plan');
+        const amount = urlParams.get('amount');
+        const duration = urlParams.get('duration');
+
+        // Update payment details
+        document.getElementById('plan-type').textContent = planType;
+        document.getElementById('payment-amount').textContent = `π ${amount}`;
+        document.getElementById('payment-duration').textContent = duration;
+
+        // Create payment data
+        const paymentData = {
+            amount: parseFloat(amount),
+            memo: `Premium Subscription - ${planType}`,
+            metadata: {
+                type: planType,
+                duration: duration,
+                timestamp: new Date().toISOString()
+            }
+        };
+
+        // Define payment callbacks
+        const callbacks = {
+            onReadyForServerApproval: (paymentId) => {
+                console.log('Payment ready for server approval:', paymentId);
+                document.getElementById('status-message').textContent = 'Payment ready for approval...';
+                // Here you would typically send paymentId to your backend
+                // for server-side approval
+            },
+            onReadyForServerCompletion: (paymentId, txid) => {
+                console.log('Payment ready for server completion:', paymentId, txid);
+                document.getElementById('status-message').textContent = 'Payment ready for completion...';
+                // Here you would typically send paymentId and txid to your backend
+                // for server-side completion
+            },
+            onCancel: (paymentId) => {
+                console.log('Payment cancelled:', paymentId);
+                document.getElementById('status-message').textContent = 'Payment was cancelled.';
+                alert('Payment was cancelled. Please try again if you wish to subscribe.');
+            },
+            onError: (error, payment) => {
+                console.error('Payment error:', error);
+                if (payment) {
+                    console.error('Payment details:', payment);
+                }
+                document.getElementById('status-message').textContent = 'Payment failed.';
+                alert('Payment failed. Please try again.');
+            }
+        };
+
+        // Share button click handler
+        document.getElementById('share-button').addEventListener('click', () => {
+            const shareTitle = 'Pi Sign Language Translator Premium';
+            const shareMessage = `I just subscribed to ${planType} plan on Pi Sign Language Translator! Join me and learn sign language with AI-powered translation.`;
+            Pi.openShareDialog(shareTitle, shareMessage);
+        });
+
+        // Watch ad button click handler
+        document.getElementById('watch-ad-button').addEventListener('click', async () => {
+            try {
+                // Check if ad is ready
+                const isReady = await Pi.Ads.isAdReady('rewarded');
+                if (!isReady.ready) {
+                    // Request a new ad if not ready
+                    await Pi.Ads.requestAd('rewarded');
+                }
+
+                // Show the ad
+                const adResult = await Pi.Ads.showAd('rewarded');
+                console.log('Ad result:', adResult);
+
+                if (adResult.result === 'AD_REWARDED') {
+                    // Apply discount to payment
+                    const discountedAmount = parseFloat(amount) * 0.9; // 10% discount
+                    paymentData.amount = discountedAmount;
+                    document.getElementById('payment-amount').textContent = `π ${discountedAmount.toFixed(2)}`;
+                    document.getElementById('status-message').textContent = 'Discount applied! Payment amount updated.';
+                } else if (adResult.result === 'AD_CLOSED') {
+                    document.getElementById('status-message').textContent = 'Ad closed without reward.';
+                } else if (adResult.result === 'USER_UNAUTHENTICATED') {
+                    document.getElementById('status-message').textContent = 'Please connect your Pi account to watch ads.';
+                } else {
+                    document.getElementById('status-message').textContent = 'Ad not available. Please try again later.';
+                }
+            } catch (error) {
+                console.error('Ad error:', error);
+                document.getElementById('status-message').textContent = 'Failed to show ad. Please try again.';
+            }
+        });
+
+        // Start payment process when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Check if user is authenticated
+                const authToken = localStorage.getItem('pi_auth_token');
+                if (!authToken) {
+                    document.getElementById('status-message').textContent = 'Please connect your Pi account first.';
+                    return;
+                }
+
+                // Create and start the payment
+                const payment = await Pi.createPayment(paymentData, callbacks);
+                console.log('Payment created:', payment);
+                document.getElementById('status-message').textContent = 'Payment process started...';
+            } catch (error) {
+                console.error('Payment creation failed:', error);
+                document.getElementById('status-message').textContent = 'Failed to create payment.';
+                alert('Failed to create payment. Please try again.');
+            }
+        });
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html> 

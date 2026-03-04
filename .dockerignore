@@ -1,0 +1,10 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.log
+
+# Huge training dataset (don't copy into the Docker image)
+asl_alphabet_test/
