@@ -8,17 +8,54 @@ import logging
 import requests
 from flask_cors import CORS
 from PIL import Image, ImageDraw, ImageFilter
+from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+
+load_dotenv()
+
+MAX_FILE_SIZE = 5 * 1024 * 1024
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_MIMETYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
+
+def validate_image_file(file):
+    """Validate uploaded image"""
+    if not file or not file.filename:
+        raise ValueError('No file provided')
+    
+    filename = secure_filename(file.filename)
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    if ext not in ALLOWED_EXTENSIONS:
+        raise ValueError(f'File type not allowed')
+    
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    
+    if file_size == 0:
+        raise ValueError('File is empty')
+    if file_size > MAX_FILE_SIZE:
+        raise ValueError(f'File too large')
+    
+    return filename
 
 # Pi Server API (for payment approve/complete). Set PI_SERVER_API_KEY in env or Developer Portal.
 PI_API_BASE = 'https://api.minepi.com'
 # Server API key used for approving/completing Pi payments. Can be set via
 # environment variable in production. A hard-coded fallback is provided for
 # local development or when the variable is omitted.
-PI_SERVER_API_KEY = os.environ.get('hmyqrbpdjlq4gmkc7xgztbszjbe25mkkcactkpcpfz85mav9e1wlwsmqgy5vnagv')
+PI_SERVER_API_KEY = os.environ.get('PI_SERVER_API_KEY')
+# if not PI_SERVER_API_KEY:
+#     raise ValueError("PI_SERVER_API_KEY environment variable not set")
 
 app = Flask(__name__, static_folder='static')
 # Enable CORS for all routes with proper configuration
-CORS(app, resources={r"/*": {"origins": "*", "allow_headers": "*", "expose_headers": "*"}})
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+CORS(app,
+    resources={r"/api/*": {"origins": ALLOWED_ORIGINS}},
+    allow_headers=['Content-Type', 'Authorization'],
+    expose_headers=['Content-Length'],
+    methods=['GET', 'POST', 'OPTIONS']
+)
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -87,6 +124,11 @@ def _predict_from_image(img_array):
     return letter, confidence, probs
 
 
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy', 'models_loaded': model is not None or landmark_model is not None})
+
+
 @app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
     # Handle preflight requests
@@ -98,6 +140,44 @@ def predict():
         return jsonify({'error': 'Model not loaded'}), 500
     
     try:
+        # Check for file upload
+        if 'image' in request.files:
+            file = request.files['image']
+            try:
+                filename = validate_image_file(file)
+            except ValueError as e:
+                return jsonify({'error': str(e)}), 400
+            
+            # Process the uploaded image
+            img = Image.open(file).convert('RGB')
+            img = img.resize((160, 160), Image.Resampling.LANCZOS)
+            img_array = np.array(img)
+            if img_array.shape != (160, 160, 3):
+                return jsonify({'error': 'Invalid image shape', 'letter': None, 'confidence': 0.0}), 400
+            letter, confidence, probs = _predict_from_image(img_array)
+            # Same M-suppression as before
+            if letter == 'M' and probs is not None and len(probs) >= 2:
+                order = np.argsort(probs)[::-1]
+                second_idx = int(order[1])
+                letters_cnn = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+                              'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+                second_letter = letters_cnn[second_idx] if second_idx < 26 else ' '
+                second_prob = float(probs[second_idx])
+                if second_letter != 'M' and (confidence - second_prob) < 0.2:
+                    letter, confidence = second_letter, second_prob
+                    logger.info("DEBUG: CNN overriding M to %s (margin too small)", letter)
+            os.makedirs('static', exist_ok=True)
+            img.save(os.path.join('static', 'hand_debug.png'))
+            logger.info("DEBUG: Using CNN (uploaded image) model")
+            return jsonify({
+                'letter': letter,
+                'confidence': confidence,
+                'debug_image': '/static/hand_debug.png',
+                'message': 'Low confidence' if confidence < 0.5 else None,
+                'method': 'cnn'
+            })
+        
+        # Fallback to JSON for landmarks or base64
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Invalid request data', 'letter': None, 'confidence': 0.0}), 400
