@@ -18,12 +18,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.0/dist/hand-pose-detection.js"></script>
 
     <!-- Pi Network Frontend SDK -->
-   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<script>
-window.addEventListener("load", function () {
+ <!-- Pi Network SDK -->
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
-    if (typeof Pi === "undefined") {
-        console.error("Pi SDK not available. Open this app in Pi Browser.");
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    if (!window.Pi) {
+        console.error("Pi SDK not found. Open this app in Pi Browser.");
         return;
     }
 
@@ -32,7 +34,7 @@ window.addEventListener("load", function () {
         sandbox: true
     });
 
-    console.log("Pi SDK initialized successfully");
+    console.log("Pi SDK initialized");
 
 });
 </script>

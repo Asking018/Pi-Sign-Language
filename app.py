@@ -44,8 +44,8 @@ PI_API_BASE = 'https://api.minepi.com'
 # environment variable in production. A hard-coded fallback is provided for
 # local development or when the variable is omitted.
 PI_SERVER_API_KEY = os.environ.get('PI_SERVER_API_KEY')
-# if not PI_SERVER_API_KEY:
-#     raise ValueError("PI_SERVER_API_KEY environment variable not set")
+if not PI_SERVER_API_KEY:
+    raise ValueError("PI_SERVER_API_KEY environment variable not set")
 
 app = Flask(__name__, static_folder='static')
 # Enable CORS for all routes with proper configuration
